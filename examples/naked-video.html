@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Naked Video Experiment</title>
+</head>
+<body>
+
+  <template id="video-configuration">
+    <video crossorigin="anonymous" controls>
+      <source src="https://cdnapisec.kaltura.com/p/1038472/sp/0/playManifest/entryId/0_j74az1f0/format/url/flavorParamId/301951,301971,301961/protocol/https/a.mp4" type="video/mp4" />
+      <track src="" kind="captions" />
+    </video>
+  </template>
+
+  <div id="player"></div>
+
+  <script>
+    fetch('https://cdnapisec.kaltura.com/p/1038472/sp/103847200/playManifest/entryId/0_j74az1f0/flavorParamId/301951,301971,301961/format/applehttp/protocol/https/a.m3u8')
+      .then((res) => res.text())
+      .then((text) => {
+        let lines = text.split("\n");
+        for(let line of lines){
+          if ( line.indexOf('#EXT-X-MEDIA:TYPE=SUBTITLES') == 0 ) {
+            let match = line.match(/URI="([^"]+)"/);
+            let href_short = match[1];
+            let href_long = href_short.replace('segmentDuration/300', 'segmentDuration/20000/segmentIndex/1');
+            href_long = href_long.replace('/a.m3u8', '/a.vtt');
+            console.log(href_long);
+
+            let template = document.querySelector('#video-configuration');
+            let player = template.content.cloneNode(true);
+            player.querySelector('track').setAttribute("src", href_long);
+
+            document.querySelector('#player').appendChild(player);
+
+          }
+        }
+      });
+  </script>
+  
+</body>
+</html>

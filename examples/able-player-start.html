@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AblePlayer Start</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.1/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.1/dist/js.cookie.min.js"></script>
+
+  <link rel="stylesheet" href="../vendor/ableplayer-ableplayer-32ade91/build/ableplayer.min.css" type="text/css" />
+
+  <script src="../vendor/ableplayer-ableplayer-32ade91/build/ableplayer.js"></script>
+</head>
+<body>
+  
+    <!-- set up a template <video> structure -->
+    <template id="video-configuration">
+      <video id="video1" crossorigin="anonymous" data-able-player preload="auto" width="480" height="360">
+        <source src="" type="video/mp4" />
+        <track src="" kind="captions" />
+      </video>
+    </template>
+    
+    <div id="container"></div>
+    
+    <script>
+      let container = document.querySelector('#container');
+
+      // mp4 of the video stream
+      // flavorParamId corresponds to ... 
+      let video_href = `https://cdnapisec.kaltura.com/p/1038472/sp/0/playManifest/entryId/0_j74az1f0/format/url/flavorParamId/301951,301971,301961/protocol/https/a.mp4`;
+      
+      // fetch the m3u8 data
+      // for this example we get subtitles and stream
+      // in theory we could take one of the video streams and turn it into the above video_href
+      // #EXTM3U
+      // #EXT - X - MEDIA: TYPE = SUBTITLES, GROUP - ID="subs", NAME = "English ", DEFAULT = NO, AUTOSELECT = YES, FORCED = NO, LANGUAGE = "en", URI = "https://cfvod.kaltura.com/api_v3/index.php/service/caption_captionasset/action/serveWebVTT/captionAssetId/1_tj8mfbqr/segmentDuration/300/ks/NDRjZDY4YjkyYzY4NGY1Mjc3OTBiN2FmNzJjMGYyMGFiNTI3ZTEyOXwxMDM4NDcyOzEwMzg0NzI7MTY2ODU2NTMxODswOzE2Njg0Nzg5MTguNzM2OztjYXB0aW9uOjBfajc0YXoxZjAsZGlzYWJsZWVudGl0bGVtZW50Zm9yZW50cnk6MF9qNzRhejFmMCx1cmlyZXN0cmljdDovYXBpX3YzL2luZGV4LnBocC9zZXJ2aWNlL2NhcHRpb25fY2FwdGlvbmFzc2V0L2FjdGlvbi9zZXJ2ZVdlYlZUVCo7Ow==/a.m3u8"
+      // #EXT - X - STREAM - INF: PROGRAM - ID=1, BANDWIDTH = 68006, SUBTITLES = "subs"
+      // https://cfvod.kaltura.com/hls/p/1038472/sp/103847200/serveFlavor/entryId/0_j74az1f0/v/2/ev/2/flavorId/0_aafckwlv/name/a.mp4/index.m3u8
+      // #EXT - X - STREAM - INF: PROGRAM - ID=1, BANDWIDTH = 134967, SUBTITLES = "subs"
+      // https://cfvod.kaltura.com/hls/p/1038472/sp/103847200/serveFlavor/entryId/0_j74az1f0/v/2/ev/2/flavorId/0_3g4yxq1d/name/a.mp4/index.m3u8
+
+      fetch('https://cdnapisec.kaltura.com/p/1038472/sp/103847200/playManifest/entryId/0_j74az1f0/flavorParamId/301951,301971,301961/format/applehttp/protocol/https/a.m3u8')
+        .then((res) => res.text())
+        .then((text) => {
+          let lines = text.split("\n");
+          for (let line of lines) {
+            if (line.indexOf('#EXT-X-MEDIA:TYPE=SUBTITLES') == 0) {
+              let match = line.match(/URI="([^"]+)"/);
+              let href_short = match[1];
+              let href_long = href_short.replace('segmentDuration/300', 'segmentDuration/20000/segmentIndex/1');
+              href_long = href_long.replace('/a.m3u8', '/a.vtt');
+              console.log(href_long);
+
+              let template = document.querySelector('#video-configuration');
+              let playerEl = template.content.cloneNode(true);
+              playerEl.querySelector('track').setAttribute("src", href_long);
+
+              container.appendChild(playerEl);
+              playerEl = document.querySelector('#video1');
+              console.log($(playerEl));
+              AblePlayerInstances.push(new AblePlayer($(playerEl), $(playerEl)));
+            }
+          }
+        });
+    </script>
+    
+</body>
+</html>
